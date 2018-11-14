@@ -13,12 +13,12 @@ import (
 	"github.com/nareix/joy4/format/flv"
 	"github.com/nareix/joy4/format/flv/flvio"
 	"github.com/nareix/joy4/utils/bits/pio"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/url"
 	"strings"
 	"time"
-	"github.com/sirupsen/logrus"
 )
 
 var Debug bool

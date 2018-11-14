@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/nareix/joy4/av"
 	"github.com/nareix/joy4/av/pktque"
-	"time"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 var Debug bool

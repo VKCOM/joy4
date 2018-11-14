@@ -16,10 +16,10 @@ import (
 	"github.com/nareix/joy4/av"
 	"github.com/nareix/joy4/av/avutil"
 	"github.com/nareix/joy4/codec/aacparser"
+	"github.com/sirupsen/logrus"
 	"runtime"
 	"time"
 	"unsafe"
-	"github.com/sirupsen/logrus"
 )
 
 const debug = false
