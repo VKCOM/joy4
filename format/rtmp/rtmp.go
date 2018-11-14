@@ -1291,7 +1291,7 @@ func (self *Conn) readChunk() (err error) {
 		size = self.readMaxChunkSize
 	}
 	off := cs.msgdatalen - cs.msgdataleft
-	buf := cs.msgdata[off: int(off)+size]
+	buf := cs.msgdata[off : int(off)+size]
 	if _, err = io.ReadFull(self.bufr, buf); err != nil {
 		return
 	}
@@ -1543,7 +1543,7 @@ func (self *Conn) handshakeClient() (err error) {
 
 	S0S1S2 := random[1536*2+1:]
 	//S0 := S0S1S2[:1]
-	S1 := S0S1S2[1: 1536+1]
+	S1 := S0S1S2[1 : 1536+1]
 	//S0S1 := S0S1S2[:1536+1]
 	//S2 := S0S1S2[1536+1:]
 
@@ -1587,13 +1587,13 @@ func (self *Conn) handshakeServer() (err error) {
 
 	C0C1C2 := random[:1536*2+1]
 	C0 := C0C1C2[:1]
-	C1 := C0C1C2[1: 1536+1]
+	C1 := C0C1C2[1 : 1536+1]
 	C0C1 := C0C1C2[:1536+1]
 	C2 := C0C1C2[1536+1:]
 
 	S0S1S2 := random[1536*2+1:]
 	S0 := S0S1S2[:1]
-	S1 := S0S1S2[1: 1536+1]
+	S1 := S0S1S2[1 : 1536+1]
 	S0S1 := S0S1S2[:1536+1]
 	S2 := S0S1S2[1536+1:]
 
