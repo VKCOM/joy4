@@ -21,7 +21,10 @@ import (
 	"time"
 )
 
-var Debug bool
+var (
+	Debug        bool
+	MaxChunkSize = 128 * 1024 * 1024
+)
 
 func ParseURL(uri string) (u *url.URL, err error) {
 	if u, err = url.Parse(uri); err != nil {
@@ -59,6 +62,7 @@ type Server struct {
 	HandlePublish func(*Conn)
 	HandlePlay    func(*Conn)
 	HandleConn    func(*Conn)
+	CreateConn    func(net.Conn) *Conn
 }
 
 func (self *Server) handleConn(conn *Conn) (err error) {
@@ -113,13 +117,17 @@ func (self *Server) ListenAndServe() (err error) {
 			logrus.Debug("rtmp: server: accepted")
 		}
 
-		conn := NewConn(netconn)
+		var conn *Conn
+		if self.CreateConn != nil {
+			conn = self.CreateConn(netconn)
+		} else {
+			conn = NewConn(netconn)
+		}
 		conn.isserver = true
+
 		go func() {
 			err := self.handleConn(conn)
-			if Debug {
-				logrus.Debug("rtmp: server: client closed err:", err)
-			}
+			logrus.Info("rtmp: server: client closed err:", err)
 		}()
 	}
 }
@@ -139,7 +147,7 @@ type Conn struct {
 	URL             *url.URL
 	OnPlayOrPublish func(string, flvio.AMFMap) error
 
-	prober  *flv.Prober
+	Prober  *flv.Prober
 	streams []av.CodecData
 
 	txbytes uint64
@@ -203,7 +211,7 @@ func (self *txrxcount) Write(p []byte) (int, error) {
 
 func NewConn(netconn net.Conn) *Conn {
 	conn := &Conn{}
-	conn.prober = &flv.Prober{}
+	conn.Prober = &flv.Prober{}
 	conn.netconn = netconn
 	conn.readcsmap = make(map[uint32]*chunkStream)
 	conn.readMaxChunkSize = 128
@@ -354,7 +362,7 @@ var CodecTypes = flv.CodecTypes
 
 func (self *Conn) writeBasicConf() (err error) {
 	// > SetChunkSize
-	if err = self.writeSetChunkSize(1024 * 1024 * 128); err != nil {
+	if err = self.writeSetChunkSize(MaxChunkSize); err != nil {
 		return
 	}
 	// > WindowAckSize
@@ -443,7 +451,7 @@ func (self *Conn) readConnect() (err error) {
 					return
 				}
 
-			// < publish("path")
+				// < publish("path")
 			case "publish":
 				if Debug {
 					logrus.Debug("rtmp: < publish")
@@ -486,7 +494,7 @@ func (self *Conn) readConnect() (err error) {
 				self.stage++
 				return
 
-			// < play("path")
+				// < play("path")
 			case "play":
 				if Debug {
 					logrus.Debug("rtmp: < play")
@@ -579,17 +587,17 @@ func (self *Conn) checkCreateStreamResult() (ok bool, avmsgsid uint32) {
 }
 
 func (self *Conn) probe() (err error) {
-	for !self.prober.Probed() {
+	for !self.Prober.Probed() {
 		var tag flvio.Tag
 		if tag, err = self.pollAVTag(); err != nil {
 			return
 		}
-		if err = self.prober.PushTag(tag, int32(self.timestamp)); err != nil {
+		if err = self.Prober.PushTag(tag, int32(self.timestamp)); err != nil {
 			return
 		}
 	}
 
-	self.streams = self.prober.Streams
+	self.streams = self.Prober.Streams
 	self.stage++
 	return
 }
@@ -776,8 +784,8 @@ func (self *Conn) ReadPacket() (pkt av.Packet, err error) {
 		return
 	}
 
-	if !self.prober.Empty() {
-		pkt = self.prober.PopPacket()
+	if !self.Prober.Empty() {
+		pkt = self.Prober.PopPacket()
 		return
 	}
 
@@ -788,7 +796,7 @@ func (self *Conn) ReadPacket() (pkt av.Packet, err error) {
 		}
 
 		var ok bool
-		if pkt, ok = self.prober.TagToPacket(tag, int32(self.timestamp)); ok {
+		if pkt, ok = self.Prober.TagToPacket(tag, int32(self.timestamp)); ok {
 			return
 		}
 	}
@@ -1283,7 +1291,7 @@ func (self *Conn) readChunk() (err error) {
 		size = self.readMaxChunkSize
 	}
 	off := cs.msgdatalen - cs.msgdataleft
-	buf := cs.msgdata[off : int(off)+size]
+	buf := cs.msgdata[off: int(off)+size]
 	if _, err = io.ReadFull(self.bufr, buf); err != nil {
 		return
 	}
@@ -1535,7 +1543,7 @@ func (self *Conn) handshakeClient() (err error) {
 
 	S0S1S2 := random[1536*2+1:]
 	//S0 := S0S1S2[:1]
-	S1 := S0S1S2[1 : 1536+1]
+	S1 := S0S1S2[1: 1536+1]
 	//S0S1 := S0S1S2[:1536+1]
 	//S2 := S0S1S2[1536+1:]
 
@@ -1579,13 +1587,13 @@ func (self *Conn) handshakeServer() (err error) {
 
 	C0C1C2 := random[:1536*2+1]
 	C0 := C0C1C2[:1]
-	C1 := C0C1C2[1 : 1536+1]
+	C1 := C0C1C2[1: 1536+1]
 	C0C1 := C0C1C2[:1536+1]
 	C2 := C0C1C2[1536+1:]
 
 	S0S1S2 := random[1536*2+1:]
 	S0 := S0S1S2[:1]
-	S1 := S0S1S2[1 : 1536+1]
+	S1 := S0S1S2[1: 1536+1]
 	S0S1 := S0S1S2[:1536+1]
 	S2 := S0S1S2[1536+1:]
 
