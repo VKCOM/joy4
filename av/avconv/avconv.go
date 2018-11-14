@@ -204,13 +204,13 @@ func ConvertCmdline(args []string) (err error) {
 
 	if flagv {
 		for _, stream := range streams {
-			fmt.Print(stream.Type(), " ")
+			logrus.Info(stream.Type(), " ")
 		}
-		fmt.Print("-> ")
+		logrus.Info("-> ")
 		for _, stream := range convstreams {
-			fmt.Print(stream.Type(), " ")
+			logrus.Info(stream.Type(), " ")
 		}
-		fmt.Println()
+		logrus.Info()
 	}
 
 	if err = muxer.WriteHeader(convstreams); err != nil {
@@ -236,7 +236,7 @@ func ConvertCmdline(args []string) (err error) {
 			return
 		}
 		if flagv {
-			fmt.Println(pkt.Idx, pkt.Time, len(pkt.Data), pkt.IsKeyFrame)
+			logrus.Info(pkt.Idx, pkt.Time, len(pkt.Data), pkt.IsKeyFrame)
 		}
 		if duration != 0 && pkt.Time > duration {
 			break

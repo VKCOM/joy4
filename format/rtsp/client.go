@@ -188,7 +188,7 @@ func (self *Client) SendRtpKeepalive() (err error) {
 		} else if time.Now().Sub(self.rtpKeepaliveTimer) > self.RtpKeepAliveTimeout {
 			self.rtpKeepaliveTimer = time.Now()
 			if self.DebugRtsp {
-				fmt.Println("rtp: keep alive")
+				logrus.Info("rtp: keep alive")
 			}
 			req := Request{
 				Method: "OPTIONS",
@@ -231,7 +231,7 @@ func (self *Client) WriteRequest(req Request) (err error) {
 	bufout := buf.Bytes()
 
 	if self.DebugRtsp {
-		fmt.Print("> ", string(bufout))
+		logrus.Info("> ", string(bufout))
 	}
 
 	if _, err = self.conn.Write(bufout); err != nil {
@@ -418,7 +418,7 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 		}
 
 		if false && self.DebugRtp {
-			fmt.Println("rtsp: findRTSP", i, b)
+			logrus.Info("rtsp: findRTSP", i, b)
 		}
 
 		if stat != 0 {
@@ -431,7 +431,7 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 
 		if stat == Dollar && len(peek) >= 12 {
 			if self.DebugRtp {
-				fmt.Println("rtsp: dollar at", i, len(peek))
+				logrus.Info("rtsp: dollar at", i, len(peek))
 			}
 			if blocklen, _, ok := self.parseBlockHeader(peek); ok {
 				left := blocklen + 4 - len(peek)
@@ -644,7 +644,7 @@ func (self *Client) Describe() (streams []sdp.Media, err error) {
 	body := string(res.Body)
 
 	if self.DebugRtsp {
-		fmt.Println("<", body)
+		logrus.Info("<", body)
 	}
 
 	_, medias := sdp.Parse(body)
@@ -843,7 +843,7 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 
 	case naluType == 7: // sps
 		if self.client != nil && self.client.DebugRtp {
-			fmt.Println("rtsp: got sps")
+			logrus.Info("rtsp: got sps")
 		}
 		if len(self.sps) == 0 {
 			self.sps = packet
@@ -852,13 +852,13 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 			self.spsChanged = true
 			self.sps = packet
 			if self.client != nil && self.client.DebugRtp {
-				fmt.Println("rtsp: sps changed")
+				logrus.Info("rtsp: sps changed")
 			}
 		}
 
 	case naluType == 8: // pps
 		if self.client != nil && self.client.DebugRtp {
-			fmt.Println("rtsp: got pps")
+			logrus.Info("rtsp: got pps")
 		}
 		if len(self.pps) == 0 {
 			self.pps = packet
@@ -867,7 +867,7 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 			self.ppsChanged = true
 			self.pps = packet
 			if self.client != nil && self.client.DebugRtp {
-				fmt.Println("rtsp: pps changed")
+				logrus.Info("rtsp: pps changed")
 			}
 		}
 
@@ -995,12 +995,12 @@ func (self *Stream) handleRtpPacket(packet []byte) (err error) {
 	}
 
 	if self.client != nil && self.client.DebugRtp {
-		fmt.Println("rtp: packet", self.CodecData.Type(), "len", len(packet))
+		logrus.Info("rtp: packet", self.CodecData.Type(), "len", len(packet))
 		dumpsize := len(packet)
 		if dumpsize > 32 {
 			dumpsize = 32
 		}
-		fmt.Print(hex.Dump(packet[:dumpsize]))
+		logrus.Info(hex.Dump(packet[:dumpsize]))
 	}
 
 	/*
@@ -1136,7 +1136,7 @@ func (self *Client) handleBlock(block []byte) (pkt av.Packet, ok bool, err error
 	_, blockno, _ := self.parseBlockHeader(block)
 	if blockno%2 != 0 {
 		if self.DebugRtp {
-			fmt.Println("rtsp: rtcp block len", len(block)-4)
+			logrus.Info("rtsp: rtcp block len", len(block)-4)
 		}
 		return
 	}
@@ -1181,7 +1181,7 @@ func (self *Client) handleBlock(block []byte) (pkt av.Packet, ok bool, err error
 		stream.lasttime = pkt.Time
 
 		if self.DebugRtp {
-			fmt.Println("rtp: pktout", pkt.Idx, pkt.Time, len(pkt.Data))
+			logrus.Info("rtp: pktout", pkt.Idx, pkt.Time, len(pkt.Data))
 		}
 
 		stream.pkt = av.Packet{}

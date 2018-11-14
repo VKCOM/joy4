@@ -9,13 +9,13 @@ func ExampleVec() {
 	println(VecLen(vec))
 
 	vec = VecSlice(vec, 1, -1)
-	fmt.Println(vec)
+	logrus.Info(vec)
 
 	vec = VecSlice(vec, 2, -1)
-	fmt.Println(vec)
+	logrus.Info(vec)
 
 	vec = VecSlice(vec, 8, 8)
-	fmt.Println(vec)
+	logrus.Info(vec)
 
 	// Output:
 }

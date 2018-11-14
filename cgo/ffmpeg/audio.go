@@ -70,7 +70,7 @@ func (self *Resampler) Resample(in av.AudioFrame) (out av.AudioFrame, err error)
 				}
 			}
 
-			//fmt.Println("flush:", "outSampleCount", outSampleCount, "convertSamples", convertSamples, "datasize", len(flush.Data[0]))
+			//logrus.Info("flush:", "outSampleCount", outSampleCount, "convertSamples", convertSamples, "datasize", len(flush.Data[0]))
 		} else {
 			runtime.SetFinalizer(self, func(self *Resampler) {
 				self.Close()
@@ -367,7 +367,7 @@ func (self *AudioEncoder) encodeOne(frame av.AudioFrame) (gotpkt bool, pkt []byt
 			var f *float64 = (*float64)(unsafe.Pointer(&frame.Data[0][i*4]))
 			farr = append(farr, fmt.Sprintf("%.8f", *f))
 		}
-		fmt.Println(farr)
+		logrus.Info(farr)
 	}
 	cerr := C.avcodec_encode_audio2(ff.codecCtx, &cpkt, ff.frame, &cgotpkt)
 	if cerr < C.int(0) {

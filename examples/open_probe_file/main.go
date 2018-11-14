@@ -18,10 +18,10 @@ func main() {
 	for _, stream := range streams {
 		if stream.Type().IsAudio() {
 			astream := stream.(av.AudioCodecData)
-			fmt.Println(astream.Type(), astream.SampleRate(), astream.SampleFormat(), astream.ChannelLayout())
+			logrus.Info(astream.Type(), astream.SampleRate(), astream.SampleFormat(), astream.ChannelLayout())
 		} else if stream.Type().IsVideo() {
 			vstream := stream.(av.VideoCodecData)
-			fmt.Println(vstream.Type(), vstream.Width(), vstream.Height())
+			logrus.Info(vstream.Type(), vstream.Width(), vstream.Height())
 		}
 	}
 
@@ -31,7 +31,7 @@ func main() {
 		if pkt, err = file.ReadPacket(); err != nil {
 			break
 		}
-		fmt.Println("pkt", i, streams[pkt.Idx].Type(), "len", len(pkt.Data), "keyframe", pkt.IsKeyFrame)
+		logrus.Info("pkt", i, streams[pkt.Idx].Type(), "len", len(pkt.Data), "keyframe", pkt.IsKeyFrame)
 	}
 
 	file.Close()
