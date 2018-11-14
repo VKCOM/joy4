@@ -18,6 +18,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/sirupsen/logrus"
 )
 
 var Debug bool
@@ -99,7 +100,7 @@ func (self *Server) ListenAndServe() (err error) {
 	}
 
 	if Debug {
-		fmt.Println("rtmp: server: listening on", addr)
+		logrus.Debug("rtmp: server: listening on", addr)
 	}
 
 	for {
@@ -109,7 +110,7 @@ func (self *Server) ListenAndServe() (err error) {
 		}
 
 		if Debug {
-			fmt.Println("rtmp: server: accepted")
+			logrus.Debug("rtmp: server: accepted")
 		}
 
 		conn := NewConn(netconn)
@@ -117,7 +118,7 @@ func (self *Server) ListenAndServe() (err error) {
 		go func() {
 			err := self.handleConn(conn)
 			if Debug {
-				fmt.Println("rtmp: server: client closed err:", err)
+				logrus.Debug("rtmp: server: client closed err:", err)
 			}
 		}()
 	}
@@ -445,7 +446,7 @@ func (self *Conn) readConnect() (err error) {
 			// < publish("path")
 			case "publish":
 				if Debug {
-					fmt.Println("rtmp: < publish")
+					logrus.Debug("rtmp: < publish")
 				}
 
 				if len(self.commandparams) < 1 {
@@ -488,7 +489,7 @@ func (self *Conn) readConnect() (err error) {
 			// < play("path")
 			case "play":
 				if Debug {
-					fmt.Println("rtmp: < play")
+					logrus.Debug("rtmp: < play")
 				}
 
 				if len(self.commandparams) < 1 {
@@ -600,7 +601,7 @@ func (self *Conn) writeConnect(path string) (err error) {
 
 	// > connect("app")
 	if Debug {
-		fmt.Printf("rtmp: > connect('%s') host=%s\n", path, self.URL.Host)
+		logrus.Debug("rtmp: > connect('%s') host=%s\n", path, self.URL.Host)
 	}
 	if err = self.writeCommandMsg(3, 0, "connect", 1,
 		flvio.AMFMap{
@@ -635,7 +636,7 @@ func (self *Conn) writeConnect(path string) (err error) {
 					return
 				}
 				if Debug {
-					fmt.Printf("rtmp: < _result() of connect\n")
+					logrus.Debug("rtmp: < _result() of connect\n")
 				}
 				break
 			}
@@ -665,7 +666,7 @@ func (self *Conn) connectPublish() (err error) {
 
 	// > createStream()
 	if Debug {
-		fmt.Printf("rtmp: > createStream()\n")
+		logrus.Debug("rtmp: > createStream()\n")
 	}
 	if err = self.writeCommandMsg(3, 0, "createStream", transid, nil); err != nil {
 		return
@@ -695,7 +696,7 @@ func (self *Conn) connectPublish() (err error) {
 
 	// > publish('app')
 	if Debug {
-		fmt.Printf("rtmp: > publish('%s')\n", publishpath)
+		logrus.Debug("rtmp: > publish('%s')\n", publishpath)
 	}
 	if err = self.writeCommandMsg(8, self.avmsgsid, "publish", transid, nil, publishpath); err != nil {
 		return
@@ -721,7 +722,7 @@ func (self *Conn) connectPlay() (err error) {
 
 	// > createStream()
 	if Debug {
-		fmt.Printf("rtmp: > createStream()\n")
+		logrus.Debug("rtmp: > createStream()\n")
 	}
 	if err = self.writeCommandMsg(3, 0, "createStream", 2, nil); err != nil {
 		return
@@ -755,7 +756,7 @@ func (self *Conn) connectPlay() (err error) {
 
 	// > play('app')
 	if Debug {
-		fmt.Printf("rtmp: > play('%s')\n", playpath)
+		logrus.Debug("rtmp: > play('%s')\n", playpath)
 	}
 	if err = self.writeCommandMsg(8, self.avmsgsid, "play", 0, nil, playpath); err != nil {
 		return
@@ -861,7 +862,7 @@ func (self *Conn) WritePacket(pkt av.Packet) (err error) {
 	tag, timestamp := flv.PacketToTag(pkt, stream)
 
 	if Debug {
-		fmt.Println("rtmp: WritePacket", pkt.Idx, pkt.Time, pkt.CompositionTime)
+		logrus.Debug("rtmp: WritePacket", pkt.Idx, pkt.Time, pkt.CompositionTime)
 	}
 
 	if err = self.writeAVTag(tag, int32(timestamp)); err != nil {
@@ -1083,7 +1084,7 @@ func (self *Conn) fillChunkHeader(b []byte, csid uint32, timestamp int32, msgtyp
 	}
 
 	if Debug {
-		fmt.Printf("rtmp: write chunk msgdatalen=%d msgsid=%d\n", msgdatalen, msgsid)
+		logrus.Debug("rtmp: write chunk msgdatalen=%d msgsid=%d\n", msgdatalen, msgsid)
 	}
 
 	return
@@ -1290,14 +1291,14 @@ func (self *Conn) readChunk() (err error) {
 	cs.msgdataleft -= uint32(size)
 
 	if Debug {
-		fmt.Printf("rtmp: chunk msgsid=%d msgtypeid=%d msghdrtype=%d len=%d left=%d\n",
+		logrus.Debug("rtmp: chunk msgsid=%d msgtypeid=%d msghdrtype=%d len=%d left=%d\n",
 			cs.msgsid, cs.msgtypeid, cs.msghdrtype, cs.msgdatalen, cs.msgdataleft)
 	}
 
 	if cs.msgdataleft == 0 {
 		if Debug {
-			fmt.Println("rtmp: chunk data")
-			fmt.Print(hex.Dump(cs.msgdata))
+			logrus.Debug("rtmp: chunk data")
+			logrus.Debug(hex.Dump(cs.msgdata))
 		}
 
 		if err = self.handleMsg(cs.timenow, cs.msgsid, cs.msgtypeid, cs.msgdata); err != nil {
@@ -1555,7 +1556,7 @@ func (self *Conn) handshakeClient() (err error) {
 	}
 
 	if Debug {
-		fmt.Println("rtmp: handshakeClient: server version", S1[4], S1[5], S1[6], S1[7])
+		logrus.Debug("rtmp: handshakeClient: server version", S1[4], S1[5], S1[6], S1[7])
 	}
 
 	if ver := pio.U32BE(S1[4:8]); ver != 0 {

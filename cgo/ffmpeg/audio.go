@@ -19,6 +19,7 @@ import (
 	"runtime"
 	"time"
 	"unsafe"
+	"github.com/sirupsen/logrus"
 )
 
 const debug = false
@@ -380,7 +381,7 @@ func (self *AudioEncoder) encodeOne(frame av.AudioFrame) (gotpkt bool, pkt []byt
 		C.av_packet_unref(&cpkt)
 
 		if debug {
-			fmt.Println("ffmpeg: Encode", frame.SampleCount, frame.SampleRate, frame.ChannelLayout, frame.SampleFormat, "len", len(pkt))
+			logrus.Debug("ffmpeg: Encode", frame.SampleCount, frame.SampleRate, frame.ChannelLayout, frame.SampleFormat, "len", len(pkt))
 		}
 	}
 
@@ -566,7 +567,7 @@ func (self *AudioDecoder) Setup() (err error) {
 		ff.codecCtx.extradata_size = C.int(len(self.Extradata))
 	}
 	if debug {
-		fmt.Println("ffmpeg: Decoder.Setup Extradata.len", len(self.Extradata))
+		logrus.Debug("ffmpeg: Decoder.Setup Extradata.len", len(self.Extradata))
 	}
 
 	ff.codecCtx.sample_rate = C.int(self.SampleRate)
@@ -601,7 +602,7 @@ func (self *AudioDecoder) Decode(pkt []byte) (gotframe bool, frame av.AudioFrame
 		frame.SampleRate = self.SampleRate
 
 		if debug {
-			fmt.Println("ffmpeg: Decode", frame.SampleCount, frame.SampleRate, frame.ChannelLayout, frame.SampleFormat)
+			logrus.Debug("ffmpeg: Decode", frame.SampleCount, frame.SampleRate, frame.ChannelLayout, frame.SampleFormat)
 		}
 	}
 

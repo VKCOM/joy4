@@ -6,6 +6,7 @@ import (
 	"github.com/nareix/joy4/av"
 	"github.com/nareix/joy4/av/pktque"
 	"time"
+	"github.com/sirupsen/logrus"
 )
 
 var Debug bool
@@ -80,7 +81,7 @@ func (self *tStream) audioDecodeAndEncode(inpkt av.Packet) (outpkts []av.Packet,
 	}
 
 	if Debug {
-		fmt.Println("transcode: push", inpkt.Time, dur)
+		logrus.Debug("transcode: push", inpkt.Time, dur)
 	}
 	self.timeline.Push(inpkt.Time, dur)
 
@@ -97,7 +98,7 @@ func (self *tStream) audioDecodeAndEncode(inpkt av.Packet) (outpkts []av.Packet,
 		outpkt.Time = self.timeline.Pop(dur)
 
 		if Debug {
-			fmt.Println("transcode: pop", outpkt.Time, dur)
+			logrus.Debug("transcode: pop", outpkt.Time, dur)
 		}
 
 		outpkts = append(outpkts, outpkt)
