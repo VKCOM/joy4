@@ -1,7 +1,6 @@
 package pio
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 )
 

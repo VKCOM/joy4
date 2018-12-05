@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/VKCOM/joy4/av"
 	"github.com/VKCOM/joy4/av/avutil"
 	"github.com/VKCOM/joy4/format"

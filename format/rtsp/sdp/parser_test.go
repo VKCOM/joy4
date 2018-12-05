@@ -5,7 +5,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	infos := Decode(`
+	_,infos := Parse(`
 v=0
 o=- 1459325504777324 1 IN IP4 192.168.0.123
 s=RTSP/RTP stream from Network Video Server
