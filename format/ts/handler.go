@@ -1,8 +1,8 @@
 package ts
 
 import (
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/avutil"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/av/avutil"
 	"io"
 )
 

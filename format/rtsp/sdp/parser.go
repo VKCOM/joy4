@@ -3,7 +3,7 @@ package sdp
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/nareix/joy4/av"
+	"github.com/VKCOM/joy4/av"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"

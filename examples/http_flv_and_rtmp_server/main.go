@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/av/pubsub"
-	"github.com/nareix/joy4/format"
-	"github.com/nareix/joy4/format/flv"
-	"github.com/nareix/joy4/format/rtmp"
+	"github.com/VKCOM/joy4/av/avutil"
+	"github.com/VKCOM/joy4/av/pubsub"
+	"github.com/VKCOM/joy4/format"
+	"github.com/VKCOM/joy4/format/flv"
+	"github.com/VKCOM/joy4/format/rtmp"
 	"io"
 	"net/http"
 	"sync"

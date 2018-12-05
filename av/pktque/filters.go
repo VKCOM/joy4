@@ -2,7 +2,7 @@
 package pktque
 
 import (
-	"github.com/nareix/joy4/av"
+	"github.com/VKCOM/joy4/av"
 	"time"
 )
 

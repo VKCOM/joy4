@@ -13,9 +13,9 @@ int wrap_avresample_convert(AVAudioResampleContext *avr, int *out, int outsize, 
 import "C"
 import (
 	"fmt"
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/codec/aacparser"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/av/avutil"
+	"github.com/VKCOM/joy4/codec/aacparser"
 	"github.com/sirupsen/logrus"
 	"runtime"
 	"time"

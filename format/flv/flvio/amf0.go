@@ -2,7 +2,7 @@ package flvio
 
 import (
 	"fmt"
-	"github.com/nareix/joy4/utils/bits/pio"
+	"github.com/VKCOM/joy4/utils/bits/pio"
 	"math"
 	"strings"
 	"time"

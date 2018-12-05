@@ -10,8 +10,8 @@ int wrap_avcodec_decode_video2(AVCodecContext *ctx, AVFrame *frame, void *data, 
 import "C"
 import (
 	"fmt"
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/codec/h264parser"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/codec/h264parser"
 	"image"
 	"reflect"
 	"runtime"
