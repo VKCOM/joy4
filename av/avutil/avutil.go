@@ -288,6 +288,7 @@ func CopyPackets(dst av.PacketWriter, src av.PacketReader) (err error) {
 			return
 		}
 	}
+	err = nil
 	return
 }
 
@@ -300,9 +301,7 @@ func CopyFile(dst av.Muxer, src av.Demuxer) (err error) {
 		return
 	}
 	if err = CopyPackets(dst, src); err != nil {
-		if err != io.EOF {
-			return
-		}
+		return
 	}
 	if err = dst.WriteTrailer(); err != nil {
 		return
