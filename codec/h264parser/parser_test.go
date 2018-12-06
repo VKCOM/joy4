@@ -12,7 +12,7 @@ import (
 
 func addToCorpus(data []byte, name string) {
 	_, filename, _, _ := runtime.Caller(1)
-	filepath := path.Join(path.Dir(filename), "fuzz_corpus/"+name)
+	filepath := path.Join(path.Dir(filename), "fuzz_corpus/corpus/"+name)
 	ioutil.WriteFile(filepath, data, os.ModePerm)
 }
 
@@ -20,7 +20,7 @@ func TestParserAnnex(t *testing.T) {
 	avccFrame, _ := hex.DecodeString(
 		"00000001223322330000000122332233223300000133000001000001",
 	)
-	addToCorpus(avccFrame, "annex")
+	//addToCorpus(avccFrame, "annex")
 
 	nalus, typ := SplitNALUs(avccFrame)
 	t.Log(typ, len(nalus))
@@ -31,7 +31,7 @@ func TestParserAvcc(t *testing.T) {
 	avccFrame, _ := hex.DecodeString(
 		"00000008aabbccaabbccaabb00000001aa",
 	)
-	addToCorpus(avccFrame, "avcc")
+	//addToCorpus(avccFrame, "avcc")
 
 	nalus, typ := SplitNALUs(avccFrame)
 	t.Log(typ, len(nalus))
@@ -43,7 +43,7 @@ func TestParserNoCrash(t *testing.T) {
 		"00000004",
 	)
 	assert.NoError(t, err)
-	addToCorpus(avccFrame, "avcc_no_fail")
+	//addToCorpus(avccFrame, "avcc_no_fail")
 
 	nalus, typ := SplitNALUs(avccFrame)
 	t.Log(typ, len(nalus))
