@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -87,35 +88,34 @@ func (self *Server) handleConn(conn *Conn) (err error) {
 	return
 }
 
-func (self *Server) ListenAndServe() (err error) {
+func (self *Server) Listen() (listener *net.TCPListener, err error){
 	addr := self.Addr
 	if addr == "" {
 		addr = ":1935"
 	}
 	var tcpaddr *net.TCPAddr
 	if tcpaddr, err = net.ResolveTCPAddr("tcp", addr); err != nil {
-		err = fmt.Errorf("rtmp: ListenAndServe: %s", err)
-		return
+		err = errors.Errorf("rtmp: ListenAndServe: %s", err)
+		return nil, err
 	}
 
-	var listener *net.TCPListener
 	if listener, err = net.ListenTCP("tcp", tcpaddr); err != nil {
-		return
+		return nil, err
 	}
 
-	if Debug {
-		logrus.Debug("rtmp: server: listening on", addr)
-	}
+	logrus.Infof("rtmp: server: listening on", addr)
 
+	return listener, nil
+}
+
+func (self *Server) Serve(listener *net.TCPListener) (err error){
 	for {
 		var netconn net.Conn
 		if netconn, err = listener.Accept(); err != nil {
 			return
 		}
 
-		if Debug {
-			logrus.Debug("rtmp: server: accepted")
-		}
+		logrus.Info("rtmp: server: accepted")
 
 		var conn *Conn
 		if self.CreateConn != nil {
@@ -124,11 +124,19 @@ func (self *Server) ListenAndServe() (err error) {
 			conn = NewConn(netconn)
 		}
 		conn.isserver = true
-
 		go func() {
 			err := self.handleConn(conn)
-			logrus.Info("rtmp: server: client closed err:", err)
+			logrus.Infof("rtmp: server: client closed err:", err)
 		}()
+	}
+}
+
+func (self *Server) ListenAndServe() (error) {
+	if listener, err := self.Listen(); err != nil{
+		return err
+	}else {
+		err = self.Serve(listener)
+		return err
 	}
 }
 
