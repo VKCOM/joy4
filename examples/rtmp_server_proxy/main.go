@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/VKCOM/joy4/av/avutil"
+	"github.com/VKCOM/joy4/format"
+	"github.com/VKCOM/joy4/format/rtmp"
 	"strings"
-	"github.com/nareix/joy4/format"
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/format/rtmp"
 )
 
 func init() {

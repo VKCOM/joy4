@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestBits(t *testing.T) {
+func TestBitsReader(t *testing.T) {
 	rdata := []byte{0xf3, 0xb3, 0x45, 0x60}
 	rbuf := bytes.NewReader(rdata[:])
 	r := &Reader{R: rbuf}
@@ -26,7 +26,9 @@ func TestBits(t *testing.T) {
 	if r.Read(b); b[0] != 0x34 || b[1] != 0x56 {
 		t.FailNow()
 	}
+}
 
+func TestBitsWriter(t *testing.T) {
 	wbuf := &bytes.Buffer{}
 	w := &Writer{W: wbuf}
 	w.WriteBits(0xf, 4)
@@ -40,12 +42,6 @@ func TestBits(t *testing.T) {
 	w.FlushBits()
 	wdata := wbuf.Bytes()
 	if wdata[0] != 0xf3 || wdata[1] != 0xb3 || wdata[2] != 0x45 || wdata[3] != 0x60 {
-		t.FailNow()
-	}
-
-	b = make([]byte, 8)
-	PutUInt64BE(b, 0x11223344, 32)
-	if b[0] != 0x11 || b[1] != 0x22 || b[2] != 0x33 || b[3] != 0x44 {
 		t.FailNow()
 	}
 }

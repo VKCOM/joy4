@@ -6,10 +6,11 @@ import (
 	"io"
 	"time"
 
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/codec/aacparser"
-	"github.com/nareix/joy4/codec/h264parser"
-	"github.com/nareix/joy4/format/mp4/mp4io"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/codec/aacparser"
+	"github.com/VKCOM/joy4/codec/h264parser"
+	"github.com/VKCOM/joy4/format/mp4/mp4io"
+	"github.com/sirupsen/logrus"
 )
 
 type Demuxer struct {
@@ -191,7 +192,7 @@ func (self *Stream) setSampleIndex(index int) (err error) {
 	}
 
 	if false {
-		fmt.Printf("mp4: stream[%d]: setSampleIndex chunkGroupIndex=%d chunkIndex=%d sampleOffsetInChunk=%d\n",
+		logrus.Infof("mp4: stream[%d]: setSampleIndex chunkGroupIndex=%d chunkIndex=%d sampleOffsetInChunk=%d\n",
 			self.idx, self.chunkGroupIndex, self.chunkIndex, self.sampleOffsetInChunk)
 	}
 
@@ -229,7 +230,7 @@ func (self *Stream) isSampleValid() bool {
 
 func (self *Stream) incSampleIndex() (duration int64) {
 	if false {
-		fmt.Printf("incSampleIndex sampleIndex=%d sampleOffsetInChunk=%d sampleIndexInChunk=%d chunkGroupIndex=%d chunkIndex=%d\n",
+		logrus.Infof("incSampleIndex sampleIndex=%d sampleOffsetInChunk=%d sampleIndexInChunk=%d chunkGroupIndex=%d chunkIndex=%d\n",
 			self.sampleIndex, self.sampleOffsetInChunk, self.sampleIndexInChunk, self.chunkGroupIndex, self.chunkIndex)
 	}
 
@@ -315,7 +316,7 @@ func (self *Demuxer) ReadPacket() (pkt av.Packet, err error) {
 		}
 	}
 	if false {
-		fmt.Printf("ReadPacket: chosen index=%v time=%v\n", chosen.idx, chosen.tsToTime(chosen.dts))
+		logrus.Infof("ReadPacket: chosen index=%v time=%v\n", chosen.idx, chosen.tsToTime(chosen.dts))
 	}
 	tm := chosen.tsToTime(chosen.dts)
 	if pkt, err = chosen.readPacket(); err != nil {
@@ -361,7 +362,7 @@ func (self *Stream) readPacket() (pkt av.Packet, err error) {
 		err = io.EOF
 		return
 	}
-	//fmt.Println("readPacket", self.sampleIndex)
+	//logrus.Info("readPacket", self.sampleIndex)
 
 	chunkOffset := self.sample.ChunkOffset.Entries[self.chunkIndex]
 	sampleSize := uint32(0)
@@ -400,7 +401,7 @@ func (self *Stream) seekToTime(tm time.Duration) (err error) {
 		return
 	}
 	if false {
-		fmt.Printf("stream[%d]: seekToTime index=%v time=%v cur=%v\n", self.idx, index, tm, self.tsToTime(self.dts))
+		logrus.Infof("stream[%d]: seekToTime index=%v time=%v cur=%v\n", self.idx, index, tm, self.tsToTime(self.dts))
 	}
 	return
 }

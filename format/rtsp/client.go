@@ -8,13 +8,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/nareix/joy4/utils/bits/pio"
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/codec"
-	"github.com/nareix/joy4/codec/aacparser"
-	"github.com/nareix/joy4/codec/h264parser"
-	"github.com/nareix/joy4/format/rtsp/sdp"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/av/avutil"
+	"github.com/VKCOM/joy4/codec"
+	"github.com/VKCOM/joy4/codec/aacparser"
+	"github.com/VKCOM/joy4/codec/h264parser"
+	"github.com/VKCOM/joy4/format/rtsp/sdp"
+	"github.com/VKCOM/joy4/utils/bits/pio"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/textproto"
@@ -31,7 +32,7 @@ var DebugRtsp = false
 var SkipErrRtpBlock = false
 
 const (
-	stageDescribeDone = iota+1
+	stageDescribeDone = iota + 1
 	stageSetupDone
 	stageWaitCodecData
 	stageCodecDataDone
@@ -39,7 +40,7 @@ const (
 
 type Client struct {
 	DebugRtsp bool
-	DebugRtp bool
+	DebugRtp  bool
 	Headers   []string
 
 	SkipErrRtpBlock bool
@@ -52,20 +53,20 @@ type Client struct {
 
 	stage int
 
-	setupIdx    []int
-	setupMap    []int
+	setupIdx []int
+	setupMap []int
 
 	authHeaders func(method string) []string
 
-	url        *url.URL
-	conn       *connWithTimeout
+	url         *url.URL
+	conn        *connWithTimeout
 	brconn      *bufio.Reader
-	requestUri string
-	cseq       uint
-	streams    []*Stream
+	requestUri  string
+	cseq        uint
+	streams     []*Stream
 	streamsintf []av.CodecData
-	session    string
-	body       io.Reader
+	session     string
+	body        io.Reader
 }
 
 type Request struct {
@@ -76,7 +77,7 @@ type Request struct {
 
 type Response struct {
 	StatusCode    int
-	Headers        textproto.MIMEHeader
+	Headers       textproto.MIMEHeader
 	ContentLength int
 	Body          []byte
 
@@ -105,12 +106,12 @@ func DialTimeout(uri string, timeout time.Duration) (self *Client, err error) {
 	connt := &connWithTimeout{Conn: conn}
 
 	self = &Client{
-		conn:       connt,
-		brconn:     bufio.NewReaderSize(connt, 256),
-		url:        URL,
-		requestUri: u2.String(),
-		DebugRtp:   DebugRtp,
-		DebugRtsp:  DebugRtsp,
+		conn:            connt,
+		brconn:          bufio.NewReaderSize(connt, 256),
+		url:             URL,
+		requestUri:      u2.String(),
+		DebugRtp:        DebugRtp,
+		DebugRtsp:       DebugRtsp,
 		SkipErrRtpBlock: SkipErrRtpBlock,
 	}
 	return
@@ -121,7 +122,7 @@ func Dial(uri string) (self *Client, err error) {
 }
 
 func (self *Client) allCodecDataReady() bool {
-	for _, si:= range self.setupIdx {
+	for _, si := range self.setupIdx {
 		stream := self.streams[si]
 		if stream.CodecData == nil {
 			return false
@@ -188,7 +189,7 @@ func (self *Client) SendRtpKeepalive() (err error) {
 		} else if time.Now().Sub(self.rtpKeepaliveTimer) > self.RtpKeepAliveTimeout {
 			self.rtpKeepaliveTimer = time.Now()
 			if self.DebugRtsp {
-				fmt.Println("rtp: keep alive")
+				logrus.Info("rtp: keep alive")
 			}
 			req := Request{
 				Method: "OPTIONS",
@@ -231,7 +232,7 @@ func (self *Client) WriteRequest(req Request) (err error) {
 	bufout := buf.Bytes()
 
 	if self.DebugRtsp {
-		fmt.Print("> ", string(bufout))
+		logrus.Info("> ", string(bufout))
 	}
 
 	if _, err = self.conn.Write(bufout); err != nil {
@@ -268,7 +269,7 @@ func (self *Client) parseBlockHeader(h []byte) (length int, no int, valid bool) 
 			timestamp -= stream.firsttimestamp
 			if timestamp < stream.timestamp {
 				return
-			} else if timestamp - stream.timestamp > uint32(stream.timeScale()*60*60) {
+			} else if timestamp-stream.timestamp > uint32(stream.timeScale()*60*60) {
 				return
 			}
 		}
@@ -373,7 +374,7 @@ func (self *Client) handle401(res *Response) (err error) {
 
 func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 	const (
-		R = iota+1
+		R = iota + 1
 		T
 		S
 		Header
@@ -383,7 +384,7 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 	peek := _peek[0:0]
 	stat := 0
 
-	for i := 0;; i++ {
+	for i := 0; ; i++ {
 		var b byte
 		if b, err = self.brconn.ReadByte(); err != nil {
 			return
@@ -418,7 +419,7 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 		}
 
 		if false && self.DebugRtp {
-			fmt.Println("rtsp: findRTSP", i, b)
+			logrus.Info("rtsp: findRTSP", i, b)
 		}
 
 		if stat != 0 {
@@ -431,10 +432,10 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 
 		if stat == Dollar && len(peek) >= 12 {
 			if self.DebugRtp {
-				fmt.Println("rtsp: dollar at", i, len(peek))
+				logrus.Info("rtsp: dollar at", i, len(peek))
 			}
 			if blocklen, _, ok := self.parseBlockHeader(peek); ok {
-				left := blocklen+4-len(peek)
+				left := blocklen + 4 - len(peek)
 				block = append(peek, make([]byte, left)...)
 				if _, err = io.ReadFull(self.brconn, block[len(peek):]); err != nil {
 					return
@@ -451,7 +452,7 @@ func (self *Client) findRTSP() (block []byte, data []byte, err error) {
 
 func (self *Client) readLFLF() (block []byte, data []byte, err error) {
 	const (
-		LF = iota+1
+		LF = iota + 1
 		LFLF
 	)
 	peek := []byte{}
@@ -471,7 +472,7 @@ func (self *Client) readLFLF() (block []byte, data []byte, err error) {
 				stat = LF
 				lpos = pos
 			} else if stat == LF {
-				if pos - lpos <= 2 {
+				if pos-lpos <= 2 {
 					stat = LFLF
 				} else {
 					lpos = pos
@@ -485,9 +486,9 @@ func (self *Client) readLFLF() (block []byte, data []byte, err error) {
 		if stat == LFLF {
 			data = peek
 			return
-		} else if dollarpos != -1 && dollarpos - pos >= 12 {
-			hdrlen := dollarpos-pos
-			start := len(peek)-hdrlen
+		} else if dollarpos != -1 && dollarpos-pos >= 12 {
+			hdrlen := dollarpos - pos
+			start := len(peek) - hdrlen
 			if blocklen, _, ok := self.parseBlockHeader(peek[start:]); ok {
 				block = append(peek[start:], make([]byte, blocklen+4-hdrlen)...)
 				if _, err = io.ReadFull(self.brconn, block[hdrlen:]); err != nil {
@@ -644,7 +645,7 @@ func (self *Client) Describe() (streams []sdp.Media, err error) {
 	body := string(res.Body)
 
 	if self.DebugRtsp {
-		fmt.Println("<", body)
+		logrus.Info("<", body)
 	}
 
 	_, medias := sdp.Parse(body)
@@ -810,7 +811,7 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 		return
 	}
 
-	naluType := packet[0]&0x1f
+	naluType := packet[0] & 0x1f
 
 	/*
 		Table 7-1 – NAL unit type codes
@@ -830,20 +831,20 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 	*/
 	switch {
 	case naluType >= 1 && naluType <= 5:
-			if naluType == 5 {
-				self.pkt.IsKeyFrame = true
-			}
-			self.gotpkt = true
-			// raw nalu to avcc
-			b := make([]byte, 4+len(packet))
-			pio.PutU32BE(b[0:4], uint32(len(packet)))
-			copy(b[4:], packet)
-			self.pkt.Data = b
-			self.timestamp = timestamp
+		if naluType == 5 {
+			self.pkt.IsKeyFrame = true
+		}
+		self.gotpkt = true
+		// raw nalu to avcc
+		b := make([]byte, 4+len(packet))
+		pio.PutU32BE(b[0:4], uint32(len(packet)))
+		copy(b[4:], packet)
+		self.pkt.Data = b
+		self.timestamp = timestamp
 
 	case naluType == 7: // sps
 		if self.client != nil && self.client.DebugRtp {
-			fmt.Println("rtsp: got sps")
+			logrus.Info("rtsp: got sps")
 		}
 		if len(self.sps) == 0 {
 			self.sps = packet
@@ -852,13 +853,13 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 			self.spsChanged = true
 			self.sps = packet
 			if self.client != nil && self.client.DebugRtp {
-				fmt.Println("rtsp: sps changed")
+				logrus.Info("rtsp: sps changed")
 			}
 		}
 
 	case naluType == 8: // pps
 		if self.client != nil && self.client.DebugRtp {
-			fmt.Println("rtsp: got pps")
+			logrus.Info("rtsp: got pps")
 		}
 		if len(self.pps) == 0 {
 			self.pps = packet
@@ -867,7 +868,7 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 			self.ppsChanged = true
 			self.pps = packet
 			if self.client != nil && self.client.DebugRtp {
-				fmt.Println("rtsp: pps changed")
+				logrus.Info("rtsp: pps changed")
 			}
 		}
 
@@ -940,30 +941,30 @@ func (self *Stream) handleH264Payload(timestamp uint32, packet []byte) (err erro
 
 	case naluType == 24: // STAP-A
 		/*
-		0                   1                   2                   3
-		0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                          RTP Header                           |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                         NALU 1 Data                           |
-		:                                                               :
-		+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|               | NALU 2 Size                   | NALU 2 HDR    |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                         NALU 2 Data                           |
-		:                                                               :
-		|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                               :...OPTIONAL RTP padding        |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			0                   1                   2                   3
+			0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+			+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|                          RTP Header                           |
+			+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
+			+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|                         NALU 1 Data                           |
+			:                                                               :
+			+               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|               | NALU 2 Size                   | NALU 2 HDR    |
+			+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|                         NALU 2 Data                           |
+			:                                                               :
+			|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			|                               :...OPTIONAL RTP padding        |
+			+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-		Figure 7.  An example of an RTP packet including an STAP-A
-		containing two single-time aggregation units
+			Figure 7.  An example of an RTP packet including an STAP-A
+			containing two single-time aggregation units
 		*/
 		packet = packet[1:]
 		for len(packet) >= 2 {
-			size := int(packet[0])<<8|int(packet[1])
+			size := int(packet[0])<<8 | int(packet[1])
 			if size+2 > len(packet) {
 				break
 			}
@@ -995,12 +996,12 @@ func (self *Stream) handleRtpPacket(packet []byte) (err error) {
 	}
 
 	if self.client != nil && self.client.DebugRtp {
-		fmt.Println("rtp: packet", self.CodecData.Type(), "len", len(packet))
+		logrus.Info("rtp: packet", self.CodecData.Type(), "len", len(packet))
 		dumpsize := len(packet)
 		if dumpsize > 32 {
 			dumpsize = 32
 		}
-		fmt.Print(hex.Dump(packet[:dumpsize]))
+		logrus.Info(hex.Dump(packet[:dumpsize]))
 	}
 
 	/*
@@ -1136,12 +1137,12 @@ func (self *Client) handleBlock(block []byte) (pkt av.Packet, ok bool, err error
 	_, blockno, _ := self.parseBlockHeader(block)
 	if blockno%2 != 0 {
 		if self.DebugRtp {
-			fmt.Println("rtsp: rtcp block len", len(block)-4)
+			logrus.Info("rtsp: rtcp block len", len(block)-4)
 		}
 		return
 	}
 
-	i := blockno/2
+	i := blockno / 2
 	if i >= len(self.streams) {
 		err = fmt.Errorf("rtsp: block no=%d invalid", blockno)
 		return
@@ -1158,11 +1159,11 @@ func (self *Client) handleBlock(block []byte) (pkt av.Packet, ok bool, err error
 
 	if stream.gotpkt {
 		/*
-		TODO: sync AV by rtcp NTP timestamp
-		TODO: handle timestamp overflow
-		https://tools.ietf.org/html/rfc3550
-		A receiver can then synchronize presentation of the audio and video packets by relating 
-		their RTP timestamps using the timestamp pairs in RTCP SR packets.
+			TODO: sync AV by rtcp NTP timestamp
+			TODO: handle timestamp overflow
+			https://tools.ietf.org/html/rfc3550
+			A receiver can then synchronize presentation of the audio and video packets by relating
+			their RTP timestamps using the timestamp pairs in RTCP SR packets.
 		*/
 		if stream.firsttimestamp == 0 {
 			stream.firsttimestamp = stream.timestamp
@@ -1171,17 +1172,17 @@ func (self *Client) handleBlock(block []byte) (pkt av.Packet, ok bool, err error
 
 		ok = true
 		pkt = stream.pkt
-		pkt.Time = time.Duration(stream.timestamp)*time.Second / time.Duration(stream.timeScale())
+		pkt.Time = time.Duration(stream.timestamp) * time.Second / time.Duration(stream.timeScale())
 		pkt.Idx = int8(self.setupMap[i])
 
-		if pkt.Time < stream.lasttime || pkt.Time - stream.lasttime > time.Minute*30 {
+		if pkt.Time < stream.lasttime || pkt.Time-stream.lasttime > time.Minute*30 {
 			err = fmt.Errorf("rtp: time invalid stream#%d time=%v lasttime=%v", pkt.Idx, pkt.Time, stream.lasttime)
 			return
 		}
 		stream.lasttime = pkt.Time
 
 		if self.DebugRtp {
-			fmt.Println("rtp: pktout", pkt.Idx, pkt.Time, len(pkt.Data))
+			logrus.Info("rtp: pktout", pkt.Idx, pkt.Time, len(pkt.Data))
 		}
 
 		stream.pkt = av.Packet{}
@@ -1236,4 +1237,3 @@ func Handler(h *avutil.RegisterHandler) {
 		return
 	}
 }
-

@@ -2,19 +2,20 @@ package avconv
 
 import (
 	"fmt"
+	"github.com/VKCOM/joy4/av"
+	"github.com/VKCOM/joy4/av/avutil"
+	"github.com/VKCOM/joy4/av/pktque"
+	"github.com/VKCOM/joy4/av/transcode"
+	"github.com/sirupsen/logrus"
 	"io"
 	"time"
-	"github.com/nareix/joy4/av/avutil"
-	"github.com/nareix/joy4/av"
-	"github.com/nareix/joy4/av/pktque"
-	"github.com/nareix/joy4/av/transcode"
 )
 
 var Debug bool
 
 type Option struct {
 	Transcode bool
-	Args []string
+	Args      []string
 }
 
 type Options struct {
@@ -23,7 +24,7 @@ type Options struct {
 
 type Demuxer struct {
 	transdemux *transcode.Demuxer
-	streams []av.CodecData
+	streams    []av.CodecData
 	Options
 	Demuxer av.Demuxer
 }
@@ -56,10 +57,10 @@ func (self *Demuxer) prepare() (err error) {
 	}
 
 	/*
-	var streams []av.CodecData
-	if streams, err = self.Demuxer.Streams(); err != nil {
-		return
-	}
+		var streams []av.CodecData
+		if streams, err = self.Demuxer.Streams(); err != nil {
+			return
+		}
 	*/
 
 	supports := self.Options.OutputCodecTypes
@@ -83,7 +84,7 @@ func (self *Demuxer) prepare() (err error) {
 		ok = true
 
 		var enctype av.CodecType
-		for _, typ:= range supports {
+		for _, typ := range supports {
 			if typ.IsAudio() {
 				if enc, _ = avutil.DefaultHandlers.NewAudioEncoder(typ); enc != nil {
 					enctype = typ
@@ -152,7 +153,7 @@ func ConvertCmdline(args []string) (err error) {
 				flagt = false
 				var f float64
 				fmt.Sscanf(arg, "%f", &f)
-				duration = time.Duration(f*float64(time.Second))
+				duration = time.Duration(f * float64(time.Second))
 
 			default:
 				output = arg
@@ -204,13 +205,13 @@ func ConvertCmdline(args []string) (err error) {
 
 	if flagv {
 		for _, stream := range streams {
-			fmt.Print(stream.Type(), " ")
+			logrus.Info(stream.Type(), " ")
 		}
-		fmt.Print("-> ")
+		logrus.Info("-> ")
 		for _, stream := range convstreams {
-			fmt.Print(stream.Type(), " ")
+			logrus.Info(stream.Type(), " ")
 		}
-		fmt.Println()
+		logrus.Info()
 	}
 
 	if err = muxer.WriteHeader(convstreams); err != nil {
@@ -223,7 +224,7 @@ func ConvertCmdline(args []string) (err error) {
 	}
 	filterdemux := &pktque.FilterDemuxer{
 		Demuxer: convdemux,
-		Filter: filters,
+		Filter:  filters,
 	}
 
 	for {
@@ -236,7 +237,7 @@ func ConvertCmdline(args []string) (err error) {
 			return
 		}
 		if flagv {
-			fmt.Println(pkt.Idx, pkt.Time, len(pkt.Data), pkt.IsKeyFrame)
+			logrus.Info(pkt.Idx, pkt.Time, len(pkt.Data), pkt.IsKeyFrame)
 		}
 		if duration != 0 && pkt.Time > duration {
 			break
@@ -252,4 +253,3 @@ func ConvertCmdline(args []string) (err error) {
 
 	return
 }
-

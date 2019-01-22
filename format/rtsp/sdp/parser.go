@@ -3,8 +3,8 @@ package sdp
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
-	"github.com/nareix/joy4/av"
+	"github.com/VKCOM/joy4/av"
+	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -79,7 +79,7 @@ func Parse(content string) (sess Session, medias []Media) {
 								media.TimeScale = i
 							}
 							if false {
-								fmt.Println("sdp:", keyval[1], media.TimeScale)
+								logrus.Info("sdp:", keyval[1], media.TimeScale)
 							}
 						}
 						keyval = strings.Split(field, ";")
