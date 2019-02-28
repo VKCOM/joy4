@@ -6,6 +6,6 @@ os:
     - linux
 
 before_script:
-  - go get -d -v ./...
+  - go get -v 
 script:
-  - go build -v ./...
+  - go build
