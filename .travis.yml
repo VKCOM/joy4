@@ -1,0 +1,11 @@
+language: go
+branches: 
+  only: 
+    - master
+os:
+    - linux
+
+before_script:
+  - go get -d -v ./...
+script:
+  - go build -v ./...
