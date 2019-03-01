@@ -15,4 +15,5 @@ addons:
     - libavutil-dev
 
 script:
-  - go build
+  - go build ./...
+  - go test ./...
