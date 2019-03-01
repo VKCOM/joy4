@@ -6,6 +6,7 @@ os:
     - linux
 
 before_script:
+  - apt-get install -y libavformat57
   - go get -v 
 script:
   - go build
