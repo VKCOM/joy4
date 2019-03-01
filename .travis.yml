@@ -5,9 +5,11 @@ branches:
 os:
     - linux
 
-before_script:
-  - sudo apt-get update -q
-  - sudo apt-get install -y libavformat57
-  - go get -v 
+addons:
+  apt:
+    packages:
+    - libavformat-dev
+    - libavformat57
+
 script:
   - go build
