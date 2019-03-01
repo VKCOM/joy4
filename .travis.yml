@@ -9,6 +9,7 @@ addons:
   apt:
     packages:
     - libavformat-dev
+    - libavresample-dev
 
 script:
   - go build
