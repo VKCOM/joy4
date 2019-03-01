@@ -10,6 +10,7 @@ addons:
     packages:
     - libavformat-dev
     - libavresample-dev
+    - libavcodec-dev
 
 script:
   - go build
