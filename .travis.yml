@@ -9,7 +9,6 @@ addons:
   apt:
     packages:
     - libavformat-dev
-    - libavformat57
 
 script:
   - go build
