@@ -12,6 +12,7 @@ addons:
     - libavresample-dev
     - libavcodec-dev
     - libswscale-dev
+    - libavutil-dev
 
 script:
   - go build
