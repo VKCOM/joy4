@@ -1,0 +1,37 @@
+# github.com/VKCOM/joy4 v0.0.0-20190627144217-c4b6e26f04b4
+github.com/VKCOM/joy4/av
+github.com/VKCOM/joy4/av/avutil
+github.com/VKCOM/joy4/av/pktque
+github.com/VKCOM/joy4/av/transcode
+github.com/VKCOM/joy4/codec/fake
+github.com/VKCOM/joy4/utils/bits
+github.com/VKCOM/joy4/utils/bits/pio
+github.com/VKCOM/joy4/av/pubsub
+github.com/VKCOM/joy4/format
+github.com/VKCOM/joy4/format/flv
+github.com/VKCOM/joy4/format/rtmp
+github.com/VKCOM/joy4/format/aac
+github.com/VKCOM/joy4/format/mp4
+github.com/VKCOM/joy4/format/rtsp
+github.com/VKCOM/joy4/format/ts
+github.com/VKCOM/joy4/codec/aacparser
+github.com/VKCOM/joy4/codec
+github.com/VKCOM/joy4/codec/h264parser
+github.com/VKCOM/joy4/format/flv/flvio
+github.com/VKCOM/joy4/format/mp4/mp4io
+github.com/VKCOM/joy4/format/rtsp/sdp
+github.com/VKCOM/joy4/format/ts/tsio
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/sirupsen/logrus v1.4.2
+github.com/sirupsen/logrus
+# github.com/stretchr/testify v1.2.2
+github.com/stretchr/testify/assert
+# golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+golang.org/x/sys/unix
