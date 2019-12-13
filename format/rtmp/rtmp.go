@@ -13,13 +13,13 @@ import (
 	"github.com/VKCOM/joy4/format/flv"
 	"github.com/VKCOM/joy4/format/flv/flvio"
 	"github.com/VKCOM/joy4/utils/bits/pio"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/url"
 	"strings"
 	"time"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -88,7 +88,7 @@ func (self *Server) handleConn(conn *Conn) (err error) {
 	return
 }
 
-func (self *Server) Listen() (listener *net.TCPListener, err error){
+func (self *Server) Listen() (listener *net.TCPListener, err error) {
 	addr := self.Addr
 	if addr == "" {
 		addr = ":1935"
@@ -103,12 +103,12 @@ func (self *Server) Listen() (listener *net.TCPListener, err error){
 		return nil, err
 	}
 
-	logrus.Infof("rtmp: server: listening on", addr)
+	logrus.Infof("rtmp: server: listening on %s", addr)
 
 	return listener, nil
 }
 
-func (self *Server) Serve(listener *net.TCPListener) (err error){
+func (self *Server) Serve(listener *net.TCPListener) (err error) {
 	for {
 		var netconn net.Conn
 		if netconn, err = listener.Accept(); err != nil {
@@ -126,15 +126,15 @@ func (self *Server) Serve(listener *net.TCPListener) (err error){
 		conn.isserver = true
 		go func() {
 			err := self.handleConn(conn)
-			logrus.Infof("rtmp: server: client closed err:", err)
+			logrus.Infof("rtmp: server: client closed err: %v", err)
 		}()
 	}
 }
 
-func (self *Server) ListenAndServe() (error) {
-	if listener, err := self.Listen(); err != nil{
+func (self *Server) ListenAndServe() error {
+	if listener, err := self.Listen(); err != nil {
 		return err
-	}else {
+	} else {
 		err = self.Serve(listener)
 		return err
 	}
@@ -617,7 +617,7 @@ func (self *Conn) writeConnect(path string) (err error) {
 
 	// > connect("app")
 	if Debug {
-		logrus.Debug("rtmp: > connect('%s') host=%s\n", path, self.URL.Host)
+		logrus.Debugf("rtmp: > connect('%s') host=%s\n", path, self.URL.Host)
 	}
 	if err = self.writeCommandMsg(3, 0, "connect", 1,
 		flvio.AMFMap{
@@ -712,7 +712,7 @@ func (self *Conn) connectPublish() (err error) {
 
 	// > publish('app')
 	if Debug {
-		logrus.Debug("rtmp: > publish('%s')\n", publishpath)
+		logrus.Debugf("rtmp: > publish('%s')\n", publishpath)
 	}
 	if err = self.writeCommandMsg(8, self.avmsgsid, "publish", transid, nil, publishpath); err != nil {
 		return
@@ -772,7 +772,7 @@ func (self *Conn) connectPlay() (err error) {
 
 	// > play('app')
 	if Debug {
-		logrus.Debug("rtmp: > play('%s')\n", playpath)
+		logrus.Debugf("rtmp: > play('%s')\n", playpath)
 	}
 	if err = self.writeCommandMsg(8, self.avmsgsid, "play", 0, nil, playpath); err != nil {
 		return
@@ -1100,7 +1100,7 @@ func (self *Conn) fillChunkHeader(b []byte, csid uint32, timestamp int32, msgtyp
 	}
 
 	if Debug {
-		logrus.Debug("rtmp: write chunk msgdatalen=%d msgsid=%d\n", msgdatalen, msgsid)
+		logrus.Debugf("rtmp: write chunk msgdatalen=%d msgsid=%d\n", msgdatalen, msgsid)
 	}
 
 	return
@@ -1307,7 +1307,7 @@ func (self *Conn) readChunk() (err error) {
 	cs.msgdataleft -= uint32(size)
 
 	if Debug {
-		logrus.Debug("rtmp: chunk msgsid=%d msgtypeid=%d msghdrtype=%d len=%d left=%d\n",
+		logrus.Debugf("rtmp: chunk msgsid=%d msgtypeid=%d msghdrtype=%d len=%d left=%d\n",
 			cs.msgsid, cs.msgtypeid, cs.msghdrtype, cs.msgdatalen, cs.msgdataleft)
 	}
 
