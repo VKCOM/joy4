@@ -299,6 +299,9 @@ type SPSInfo struct {
 	MbWidth  uint
 	MbHeight uint
 
+	SubWidthC  uint
+	SubHeightC uint
+
 	CropLeft   uint
 	CropRight  uint
 	CropTop    uint
@@ -334,19 +337,21 @@ func ParseSPS(data []byte) (self SPSInfo, err error) {
 		return
 	}
 
+	var chroma_format_idc, separate_colour_plane_flag uint
+	chroma_format_idc = 1
+
 	if self.ProfileIdc == 100 || self.ProfileIdc == 110 ||
 		self.ProfileIdc == 122 || self.ProfileIdc == 244 ||
 		self.ProfileIdc == 44 || self.ProfileIdc == 83 ||
 		self.ProfileIdc == 86 || self.ProfileIdc == 118 {
 
-		var chroma_format_idc uint
 		if chroma_format_idc, err = r.ReadExponentialGolombCode(); err != nil {
 			return
 		}
 
 		if chroma_format_idc == 3 {
 			// residual_colour_transform_flag
-			if _, err = r.ReadBit(); err != nil {
+			if separate_colour_plane_flag, err = r.ReadBit(); err != nil {
 				return
 			}
 		}
@@ -476,6 +481,7 @@ func ParseSPS(data []byte) (self SPSInfo, err error) {
 	}
 
 	var frame_cropping_flag uint
+
 	if frame_cropping_flag, err = r.ReadBit(); err != nil {
 		return
 	}
@@ -494,8 +500,30 @@ func ParseSPS(data []byte) (self SPSInfo, err error) {
 		}
 	}
 
-	self.Width = (self.MbWidth * 16) - self.CropLeft*2 - self.CropRight*2
-	self.Height = ((2 - frame_mbs_only_flag) * self.MbHeight * 16) - self.CropTop*2 - self.CropBottom*2
+	if separate_colour_plane_flag == 0 {
+		switch chroma_format_idc {
+		case 1:
+			self.SubWidthC = 2
+			self.SubHeightC = 2
+		case 2:
+			self.SubWidthC = 2
+			self.SubHeightC = 1
+		case 3:
+			self.SubWidthC = 1
+			self.SubHeightC = 1
+		}
+	}
+
+	cropUnitX := uint(1)
+	cropUnitY := 2 - frame_mbs_only_flag
+
+	if separate_colour_plane_flag != 1 && chroma_format_idc != 0 {
+		cropUnitX = cropUnitX * self.SubWidthC
+		cropUnitY = cropUnitY * self.SubHeightC
+	}
+
+	self.Width = (self.MbWidth*8 - self.CropLeft - self.CropRight) * cropUnitX
+	self.Height = (self.MbHeight*8 - self.CropTop - self.CropBottom) * cropUnitY
 
 	return
 }
